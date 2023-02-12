@@ -84,12 +84,12 @@ static void updateGlutton()
             //why the fuck is it called lunchbox
             if (iWeaponID != TF_WEAPON_LUNCHBOX) { return; }
         
-            pCmd->buttons |= IN_ATTACK;
+            current_user_cmd->buttons |= IN_ATTACK;
         
-            static float flLastSendTime = I::GlobalVars->curtime;		//	dont get disconnected
-            if (fabsf(I::GlobalVars->curtime - flLastSendTime) > .5f) {
+            static float flLastSendTime = g_GlobalVars->curtime;		//	dont get disconnected
+            if (fabsf(g_GlobalVars->curtime - flLastSendTime) > .5f) {
                 I::EngineClient->ClientCmd_Unrestricted("taunt");
-                flLastSendTime = I::GlobalVars->curtime;
+                flLastSendTime = g_GlobalVars->curtime;
             }
 }
 static void updateAntiAfk()
