@@ -79,16 +79,15 @@ static void updateGlutton()
 {
             if (!g_pLocalPlayer->IsAlive()) { return; }
         
-            CBaseCombatWeapon* pWeapon = g_pLocalPlayer->GetActiveWeapon();
-            const int iWeaponID = pWeapon->GetWeaponID();
+           CachedEntity *weapon = g_pLocalPlayer->weapon();
             //why the fuck is it called lunchbox
-            if (iWeaponID != TF_WEAPON_LUNCHBOX) { return; }
+            if (weapon->m_iClassID() != CL_CLASS(CTFLunchBox)) { return; }
         
             current_user_cmd->buttons |= IN_ATTACK;
         
             static float flLastSendTime = g_GlobalVars->curtime;		//	dont get disconnected
             if (fabsf(g_GlobalVars->curtime - flLastSendTime) > .5f) {
-                I::EngineClient->ClientCmd_Unrestricted("taunt");
+                hack::ExecuteCommand("taunt");
                 flLastSendTime = g_GlobalVars->curtime;
             }
 }
