@@ -77,7 +77,7 @@ static Timer anti_afk_timer{};
 static int last_buttons{ 0 };
 static void updateGlutton()
 {
-            if (!g_pLocalPlayer->IsAlive() || !kGlutton.Down()) { return; }
+            if (!g_pLocalPlayer->IsAlive()) { return; }
         
             CBaseCombatWeapon* pWeapon = g_pLocalPlayer->GetActiveWeapon();
             const int iWeaponID = pWeapon->GetWeaponID();
