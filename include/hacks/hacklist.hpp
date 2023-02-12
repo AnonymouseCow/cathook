@@ -15,6 +15,7 @@
 #include "SkinChanger.hpp"
 
 #endif
+#include "Glutton.hpp"
 #include "Aimbot.hpp"
 #include "AntiAim.hpp"
 #include "AntiCheat.hpp"
