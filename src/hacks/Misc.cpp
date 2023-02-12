@@ -77,7 +77,7 @@ static Timer anti_afk_timer{};
 static int last_buttons{ 0 };
 static void updateGlutton()
 {
-            if (!g_pLocalPlayer->IsAlive()) { return; }
+            if (!LOCAL_E->m_bAlivePlayer()) { return; }
         
            CachedEntity *weapon = g_pLocalPlayer->weapon();
             //why the fuck is it called lunchbox
