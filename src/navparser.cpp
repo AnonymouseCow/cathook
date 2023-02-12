@@ -299,6 +299,7 @@ public:
             {
                 bestDist   = dist;
                 bestSquare = &i;
+
             }
             auto center_corrected = i.m_center;
             center_corrected.z += PLAYER_JUMP_HEIGHT;
@@ -308,6 +309,7 @@ public:
                 continue;
             }
             ovBestDist   = dist;
+
             ovBestSquare = &i;
         }
         if (!ovBestSquare)
