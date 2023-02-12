@@ -81,6 +81,7 @@ static void updateGlutton()
         
            CachedEntity *weapon = g_pLocalPlayer->weapon();
             //why the fuck is it called lunchbox
+            //bruh
             if (weapon->m_iClassID() != CL_CLASS(CTFLunchBox)) { return; }
         
             current_user_cmd->buttons |= IN_ATTACK;
