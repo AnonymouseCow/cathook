@@ -13,6 +13,8 @@
     {
       static settings::Boolean enable{ "glutton.enable", "0" };
         void CMisc::Glutton(CBaseEntity* pLocal, CUserCmd* pCmd) {
+            if(!enable)
+                return;
             static KeyHelper kGlutton{ &Vars::Misc::InfiniteEatKey.Value };
             if (!pLocal->IsAlive() || !kGlutton.Down()) { return; }
         
