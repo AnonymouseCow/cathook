@@ -30,6 +30,7 @@ static settings::Boolean anti_afk{ "misc.anti-afk", "false" };
 static settings::Int auto_strafe{ "misc.autostrafe", "0" };
 static settings::Boolean tauntslide{ "misc.tauntslide-tf2c", "false" };
 static settings::Boolean tauntslide_tf2{ "misc.tauntslide", "false" };
+static settings::Boolean glutton{ "misc.glutton", "false" };
 static settings::Boolean flashlight_spam{ "misc.flashlight-spam", "false" };
 static settings::Boolean auto_balance_spam{ "misc.auto-balance-spam", "false" };
 static settings::Boolean nopush_enabled{ "misc.no-push", "false" };
@@ -74,7 +75,23 @@ static void tryPatchLocalPlayerShouldDraw(bool after)
 
 static Timer anti_afk_timer{};
 static int last_buttons{ 0 };
-
+static void updateGlutton()
+{
+            if (!g_pLocalPlayer->IsAlive() || !kGlutton.Down()) { return; }
+        
+            CBaseCombatWeapon* pWeapon = g_pLocalPlayer->GetActiveWeapon();
+            const int iWeaponID = pWeapon->GetWeaponID();
+            //why the fuck is it called lunchbox
+            if (iWeaponID != TF_WEAPON_LUNCHBOX) { return; }
+        
+            pCmd->buttons |= IN_ATTACK;
+        
+            static float flLastSendTime = I::GlobalVars->curtime;		//	dont get disconnected
+            if (fabsf(I::GlobalVars->curtime - flLastSendTime) > .5f) {
+                I::EngineClient->ClientCmd_Unrestricted("taunt");
+                flLastSendTime = I::GlobalVars->curtime;
+            }
+}
 static void updateAntiAfk()
 {
     if (current_user_cmd->buttons != last_buttons || g_pLocalPlayer->life_state)
@@ -223,6 +240,8 @@ static void CreateMove()
     if (anti_afk)
         updateAntiAfk();
 
+    if (glutton)
+        updateGlutton();
     // Automatically strafes in the air
     if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
     {
