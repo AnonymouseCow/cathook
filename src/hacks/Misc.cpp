@@ -209,65 +209,69 @@ static void CreateMove()
     {
         for (auto const &ent : entity_cache::player_cache)
         {
-
             if (CE_INVALID(ent) || ent == LOCAL_E || (!misc_drawhitboxes_dead && !ent->m_bAlivePlayer()))
+            {
                 continue;
+            }
+
             QueueWireframeHitboxes(ent->hitboxes);
         }
     }
 #endif
     if (current_user_cmd->command_number)
-        last_number = current_user_cmd->command_number;
-    // AntiAfk That after a certian time without movement keys depressed, causes
-    // random keys to be spammed for 1 second
-    if (anti_afk)
-        updateAntiAfk();
+    last_number = current_user_cmd->command_number;
 
-    // Automatically strafes in the air
-    if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
+// AntiAfk that causes random keys to be spammed for 1 second after a certain time without movement keys depressed
+if (anti_afk)
+    updateAntiAfk();
+
+// Automatically strafes in the air
+if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
+{
+    auto flags = CE_INT(LOCAL_E, netvar.iFlags);
+    auto movetype = (unsigned)CE_VAR(LOCAL_E, 0x194, unsigned char);
+
+    // Noclip
+    if (movetype != 8)
     {
-        auto flags    = CE_INT(LOCAL_E, netvar.iFlags);
-        auto movetype = (unsigned) CE_VAR(LOCAL_E, 0x194, unsigned char);
-
-        // Noclip
-        if (movetype != 8)
+        switch (*auto_strafe)
         {
-            switch (*auto_strafe)
-            {
             case 0: // Off
                 break;
+
             case 1: // Regular strafe
             {
                 static bool was_jumping = false;
-                bool is_jumping         = current_user_cmd->buttons & IN_JUMP;
+                bool is_jumping = current_user_cmd->buttons & IN_JUMP;
 
                 if (!(flags & FL_ONGROUND) && !(flags & FL_INWATER) && (!is_jumping || was_jumping))
+                {
                     if (current_user_cmd->mousedx)
                         current_user_cmd->sidemove = current_user_cmd->mousedx > 1 ? 450.f : -450.f;
+                }
 
                 was_jumping = is_jumping;
-
                 break;
             }
-            case 2: // Multidirectional Airstrafe,
-                    // Huge Credits to https://github.com/degeneratehyperbola/NEPS, as their airstrafe
-                    // Apparently just works for tf2
-                    // Also credits to "zelta" for porting it to tf2,
-                    // And "Cyanide" for making it work with cathook.
+
+            case 2: // Multidirectional Airstrafe
             {
                 const float speed = CE_VECTOR(LOCAL_E, netvar.vVelocity).Length2D();
-                auto vel          = CE_VECTOR(LOCAL_E, netvar.vVelocity);
+                auto vel = CE_VECTOR(LOCAL_E, netvar.vVelocity);
 
                 if (flags & FL_ONGROUND || flags & FL_INWATER)
                     break;
-                if (speed < 2.0f)
-                    break;
 
-                constexpr auto perfectDelta = [](float speed) noexcept
+                if (speed < 2.0f)
+                {
+                    Shutdown();
+                    break;
+                }
+
+                const auto perfectDelta = [](float speed) noexcept
                 {
                     static auto speedVar = CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed);
-                    static auto airVar   = g_ICvar->FindVar("sv_airaccelerate");
-                    // This is hardcoded for tf2, unless you run sourcemod
+                    static auto airVar = g_ICvar->FindVar("sv_airaccelerate");
                     static auto wishSpeed = 30.0f;
 
                     const auto term = wishSpeed / airVar->GetFloat() / speedVar * 100.0f / speed;
@@ -279,25 +283,27 @@ static void CreateMove()
                 };
 
                 const float pDelta = perfectDelta(speed);
+
                 if (pDelta)
                 {
-                    const float yaw     = DEG2RAD(g_pLocalPlayer->v_OrigViewangles.y);
-                    const float velDir  = atan2f(vel.y, vel.x) - yaw;
+                    const float yaw = DEG2RAD(g_pLocalPlayer->v_OrigViewangles.y);
+                    const float velDir = atan2f(vel.y, vel.x) - yaw;
                     const float wishAng = atan2f(-current_user_cmd->sidemove, current_user_cmd->forwardmove);
-                    const float delta   = angleDiffRad(velDir, wishAng); // Helpers::angleDiffRad(velDir, wishAng);
-
+                    const float delta = angleDiffRad(velDir, wishAng);
                     float moveDir = delta < 0.0f ? velDir + pDelta : velDir - pDelta;
 
                     current_user_cmd->forwardmove = cosf(moveDir) * 450.0f;
-                    current_user_cmd->sidemove    = -sinf(moveDir) * 450.0f;
+                    current_user_cmd->sidemove = -sinf(moveDir) * 450.0f;
                 }
                 break;
             }
+
             default:
                 break;
-            }
         }
     }
+}
+
 
     // TF2c Tauntslide
     IF_GAME(IsTF2C())

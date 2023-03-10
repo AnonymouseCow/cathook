@@ -13,11 +13,13 @@ class BytePatch
     std::vector<unsigned char> patch_bytes;
     std::vector<unsigned char> original;
     bool patched{ false };
+    bool destroyed{ false };
 
 public:
     ~BytePatch()
     {
         Shutdown();
+        destroyed = true;
     }
     BytePatch(std::function<uintptr_t(const char *)> SigScanFunc, const char *pattern, size_t offset, std::vector<unsigned char> patch) : patch_bytes{ patch }
     {
@@ -79,7 +81,7 @@ public:
     }
     void Shutdown()
     {
-        if (patched)
+        if (!destroyed && patched)
         {
             void *page          = (void *) ((uint64_t) addr & ~0xFFF);
             void *end_page      = (void *) (((uint64_t)(addr) + size) & ~0xFFF);
