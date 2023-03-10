@@ -2,6 +2,7 @@
 #include <functional>
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 #include "core/logging.hpp"
 #include <sys/mman.h>
 
