@@ -218,27 +218,33 @@ static void CreateMove()
         }
     }
 #endif
+
     if (current_user_cmd->command_number)
-    last_number = current_user_cmd->command_number;
-
-// AntiAfk that causes random keys to be spammed for 1 second after a certain time without movement keys depressed
-if (anti_afk)
-    updateAntiAfk();
-
-// Automatically strafes in the air
-if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
-{
-    auto flags = CE_INT(LOCAL_E, netvar.iFlags);
-    auto movetype = (unsigned)CE_VAR(LOCAL_E, 0x194, unsigned char);
-
-    // Noclip
-    if (movetype != 8)
     {
-        switch (*auto_strafe)
+        last_number = current_user_cmd->command_number;
+    }
+
+    // AntiAfk
+    // After a certain time without movement keys being depressed, 
+    // randomly generate key presses for 1 second
+    if (anti_afk)
+    {
+        updateAntiAfk();
+    }
+
+    // Automatically strafe in the air
+    if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
+    {
+        auto flags = CE_INT(LOCAL_E, netvar.iFlags);
+        auto movetype = static_cast<unsigned>(CE_VAR(LOCAL_E, 0x194, unsigned char));
+
+        // Noclip
+        if (movetype != 8)
         {
+            switch (*auto_strafe)
+            {
             case 0: // Off
                 break;
-
             case 1: // Regular strafe
             {
                 static bool was_jumping = false;
@@ -247,44 +253,43 @@ if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
                 if (!(flags & FL_ONGROUND) && !(flags & FL_INWATER) && (!is_jumping || was_jumping))
                 {
                     if (current_user_cmd->mousedx)
-                        current_user_cmd->sidemove = current_user_cmd->mousedx > 1 ? 450.f : -450.f;
+                    {
+                        current_user_cmd->sidemove = current_user_cmd->mousedx > 1 ? 450.0f : -450.0f;
+                    }
                 }
 
                 was_jumping = is_jumping;
+
                 break;
             }
-
             case 2: // Multidirectional Airstrafe
             {
                 const float speed = CE_VECTOR(LOCAL_E, netvar.vVelocity).Length2D();
                 auto vel = CE_VECTOR(LOCAL_E, netvar.vVelocity);
 
-                if (flags & FL_ONGROUND || flags & FL_INWATER)
-                    break;
+                if (flags & FL_ONGROUND || flags & FL_INWATER) { break; } // If the player is on the ground or in water, break out of the loop
 
-                if (speed < 2.0f)
-                {
-                    Shutdown();
-                    break;
-                }
+                if (speed < 2.0f) { break; }
 
-                const auto perfectDelta = [](float speed) noexcept
+                // Perfect delta calculation
+                constexpr auto perfectDelta = [](float speed) noexcept
                 {
                     static auto speedVar = CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed);
                     static auto airVar = g_ICvar->FindVar("sv_airaccelerate");
-                    static auto wishSpeed = 30.0f;
+                    static auto wishSpeed = 30.0f; // This is hardcoded for TF2 unless you run Sourcemod
 
                     const auto term = wishSpeed / airVar->GetFloat() / speedVar * 100.0f / speed;
 
                     if (term < 1.0f && term > -1.0f)
+                    {
                         return acosf(term);
+                    }
 
                     return 0.0f;
                 };
 
                 const float pDelta = perfectDelta(speed);
-
-                if (pDelta)
+                 if (pDelta)
                 {
                     const float yaw = DEG2RAD(g_pLocalPlayer->v_OrigViewangles.y);
                     const float velDir = atan2f(vel.y, vel.x) - yaw;
@@ -303,8 +308,6 @@ if (auto_strafe && CE_GOOD(LOCAL_E) && !g_pLocalPlayer->life_state)
         }
     }
 }
-
-
     // TF2c Tauntslide
     IF_GAME(IsTF2C())
     {
